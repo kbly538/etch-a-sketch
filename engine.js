@@ -97,17 +97,17 @@ function fillCellByClick(e) {
             targetCell.style.backgroundColor = `rgb(${r},${g},${b})`;
         }
 
+
     }
-
-
-
 
 }
 
 function fillCellByMouseDown(e) {
 
     let targetCell = e.target;
+
     if (mouseDown) {
+        console.log(targetCell);
         if (e.target.classList.contains('cell')) {
             if (erasing) {
                 targetCell.style.backgroundColor = "rgb(221, 216, 210)";
@@ -128,7 +128,6 @@ function fillCellByMouseDown(e) {
 
         }
     }
-
 }
 
 function colorCell(event) {
@@ -140,18 +139,24 @@ function run() {
     createGrid(gridSize);
     let divs = document.querySelector('div.grid');
     let arr = Array.from(divs.children)
-    arr.forEach(d => {
-        d.addEventListener('click', fillCellByClick);
-        d.addEventListener('mousedown', e => { mouseDown = true; e.preventDefault()})
-        d.addEventListener('mouseup', e => { mouseDown = false })
-        d.addEventListener('mouseover', fillCellByMouseDown)
+    arr.forEach(cell => {
+        cell.addEventListener('click', fillCellByClick);
+        cell.addEventListener('mousedown', e => {
+            mouseDown = true;
+            fillCellByMouseDown(e);
+            e.preventDefault()
+        });
+        cell.addEventListener('mouseup', e => {
+            mouseDown = false;
+            e.preventDefault()
+        });
+        cell.addEventListener('mouseover', fillCellByMouseDown);
+
     })
 
 }
 
 run();
-
-
 
 
 // Listen for eraser events
@@ -161,7 +166,6 @@ eraser.addEventListener('click', e => {
 })
 
 
-
 // Listen for clear button events
 const clearButton = document.getElementById('clearButton');
 clearButton.addEventListener('click', e => {
@@ -169,18 +173,16 @@ clearButton.addEventListener('click', e => {
 })
 
 
-
 // Listen for size selection events
 const sizeSelector = document.querySelector('.gridSizeSelect');
 
 sizeSelector.addEventListener('click', e => {
-  
+
     const options = e.target.options;
     const selection = options.selectedIndex;
     userDefineGridSize = +(options[selection].value);
     run();
 })
-
 
 // Lister for color picker events
 const colorPicker = document.getElementById('colorPicker');
