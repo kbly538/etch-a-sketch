@@ -5,7 +5,7 @@ const DEFAULT_GRID_SIZE = 16;
 const MAX_GRID_AREA = MAX_GRID_SIZE * MAX_GRID_SIZE;
 const GRID_WIDTH = 800;
 const GRID_HEIGHT = 800;
-const PAINT_MODE = { default: 1, grayscale: 2, rainbow: 3 }
+const PAINT_MODE = { default: 1, grayscale: 2, rainbow: 3, erasing: 4 }
 
 let userDefineGridSize = DEFAULT_GRID_SIZE;
 let gridSize;
@@ -13,8 +13,8 @@ let calculatedGridArea;
 let cellSize;
 let grid;
 
-let selectedColor = "red";
-let erasing = false;
+let selectedColor = "rgb(255, 10, 10)";
+let tempSelectedColor = selectedColor;
 let paintMode = PAINT_MODE.default;
 
 let mouseDown = false;
@@ -77,60 +77,98 @@ function createGrid(gridSize) {
 }
 
 function fillCellByClick(e) {
-
-    let targetCell = e.target;
-
-    if (e.target.classList.contains('cell')) {
-        if (erasing) {
-            targetCell.style.backgroundColor = "rgb(221, 216, 210)";
-        }
-        else if (paintMode === PAINT_MODE.default) {
-            targetCell.style.filter = "none";
-            targetCell.style.backgroundColor = selectedColor;
-        } else if (paintMode === PAINT_MODE.grayscale) {
-            targetCell.style.backgroundColor = selectedColor;
-            targetCell.style.filter = "grayscale(100%)"
-        } else if (paintMode === PAINT_MODE.rainbow) {
-            const r = Math.round(Math.random() * 255);
-            const g = Math.round(Math.random() * 255);
-            const b = Math.round(Math.random() * 255);
-            targetCell.style.backgroundColor = `rgb(${r},${g},${b})`;
-        }
-
-
-    }
-
+    colorCell(e);
 }
 
 function fillCellByMouseDown(e) {
-
-    let targetCell = e.target;
-
     if (mouseDown) {
-        console.log(targetCell);
-        if (e.target.classList.contains('cell')) {
-            if (erasing) {
-                targetCell.style.backgroundColor = "rgb(221, 216, 210)";
-            }
-            else if (paintMode === PAINT_MODE.default) {
-                targetCell.style.filter = "none";
-                targetCell.style.backgroundColor = selectedColor;
-            } else if (paintMode === PAINT_MODE.grayscale) {
-                targetCell.style.backgroundColor = selectedColor;
-                targetCell.style.filter = "grayscale(100%)"
-
-            } else if (paintMode === PAINT_MODE.rainbow) {
-                const r = Math.round(Math.random() * 255);
-                const g = Math.round(Math.random() * 255);
-                const b = Math.round(Math.random() * 255);
-                targetCell.style.backgroundColor = `rgb(${r},${g},${b})`;
-            }
-
-        }
+        colorCell(e);
     }
 }
 
-function colorCell(event) {
+
+function colorCell(e) {
+    let targetCell = e.target;
+    let targetIsValid = e.target.classList.contains('cell');
+    let cellPainted = e.target.style.backgroundColor !== "";
+
+    if (targetIsValid) {
+        switch (paintMode) {
+            case PAINT_MODE.erasing:
+                targetCell.style.backgroundColor = "rgb(221, 216, 210)";
+                break;
+            case PAINT_MODE.default:
+                targetCell.style.filter = "none";
+                if (cellPainted)
+                {
+                    let cellBgColor = targetCell.style.backgroundColor;
+                    cellBgColor = paintOver(cellBgColor);
+                    targetCell.style.backgroundColor = cellBgColor;
+                    break;
+                }
+                targetCell.style.backgroundColor = selectedColor;
+        
+                break;
+
+            case PAINT_MODE.grayscale:
+                if (cellPainted)
+                {
+                    let cellBgColor = targetCell.style.backgroundColor;
+                    cellBgColor = paintOver(cellBgColor);
+                    targetCell.style.backgroundColor = cellBgColor;
+                    break;
+                }
+                targetCell.style.backgroundColor = selectedColor;
+                targetCell.style.filter = "grayscale(100%)"
+                
+                break;
+            case PAINT_MODE.rainbow:
+                targetCell.style.backgroundColor = generateRandomColor();
+                break;
+            default:
+                paintMode = PAINT_MODE.default;
+                break;
+        }
+    }
+
+}
+
+function parseColor(color){
+    let channelsArray = color.slice(4,-1).split(",");
+    return channelsArray;
+
+}
+
+
+
+function paintOver(color)
+{ 
+    let parsedSelectedColor = parseColor(color);
+    
+
+    let red = parsedSelectedColor[0];
+    let green = parsedSelectedColor[1];
+    let blue = parsedSelectedColor[2];
+
+    let reducedRed = Math.min(Math.max(0,red -= 20), 255);
+    let reducedGreen = Math.min(Math.max(0,green -= 20), 255);
+    let reducedBlue = Math.min(Math.max(0,blue -= 20), 255);
+
+
+    let colorOver = `rgb(${reducedRed}, ${reducedGreen}, ${reducedBlue})`;
+
+    return colorOver;
+}
+
+
+function generateRandomColor() {
+    const r = Math.round(Math.random() * 255);
+    const b = Math.round(Math.random() * 255);
+    const g = Math.round(Math.random() * 255);
+    return `rgb(${r},${g},${b})`;
+}
+
+function selectColor(event) {
     selectedColor = event.target.value;
 }
 
@@ -141,6 +179,7 @@ function run() {
     let arr = Array.from(divs.children)
     arr.forEach(cell => {
         cell.addEventListener('click', fillCellByClick);
+ 
         cell.addEventListener('mousedown', e => {
             mouseDown = true;
             fillCellByMouseDown(e);
@@ -162,7 +201,7 @@ run();
 // Listen for eraser events
 const eraser = document.getElementById('eraser');
 eraser.addEventListener('click', e => {
-    eraser.checked === true ? erasing = true : erasing = false;
+    eraser.checked === true ? paintMode = PAINT_MODE.erasing : null;
 })
 
 
@@ -186,7 +225,7 @@ sizeSelector.addEventListener('click', e => {
 
 // Lister for color picker events
 const colorPicker = document.getElementById('colorPicker');
-colorPicker.addEventListener('input', colorCell)
+colorPicker.addEventListener('input', selectColor)
 
 
 // Listen for painting mode events
