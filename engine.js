@@ -150,9 +150,9 @@ function paintOver(color)
     let green = parsedSelectedColor[1];
     let blue = parsedSelectedColor[2];
 
-    let reducedRed = Math.min(Math.max(0,red -= 20), 255);
-    let reducedGreen = Math.min(Math.max(0,green -= 20), 255);
-    let reducedBlue = Math.min(Math.max(0,blue -= 20), 255);
+    let reducedRed = Math.min(Math.max(0,red -= red * 0.1), 255);
+    let reducedGreen = Math.min(Math.max(0,green -= green * 0.1), 255);
+    let reducedBlue = Math.min(Math.max(0,blue -= blue * 0.1), 255);
 
 
     let colorOver = `rgb(${reducedRed}, ${reducedGreen}, ${reducedBlue})`;
